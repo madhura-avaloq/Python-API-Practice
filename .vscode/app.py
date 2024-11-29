@@ -1,11 +1,9 @@
 import uuid
 from flask import Flask, request
+from flask_smorest import abort
 from db import items, stores
 
 app = Flask(__name__)
-
-
-
 
 @app.get("/store") #  endpoint
 def get_stores(): #function
@@ -14,6 +12,15 @@ def get_stores(): #function
 @app.post("/store")
 def create_store():
     store_data = request.get_json()
+
+#name-not empty, store exists
+    if "name" not in store_data:
+            abort(404,message="Ensure name is included..")
+
+    for store in stores.values():
+        if store_data["name"] == store["name"]:
+            abort(404,message="Store already exists.")
+
     store_id = uuid.uuid4().hex #random 16 digit number
     new_store ={**store_data, "id": store_id}
     stores[store_id]=new_store
@@ -22,8 +29,25 @@ def create_store():
 @app.post("/item")
 def create_item(name):
     item_data  = request.get_json()
+    item_data  = request.get_json()
+
+ #to ensure no empty data passed
+    if (
+        "price" not in item_data
+        or "store_id" not in item_data
+        or "name" not in item_data
+    ):
+        abort(404,message="Ensure the params are included.")
+
+    for item in items.values():
+        if(  
+            item_data["name"] == item["name"]
+            and item_data["store_id"] == item["store_id"]
+        ):
+            abort(404,message="Item already Exists")
+
     if item_data["store-id"] not in stores:
-        return {"message": "Store not found"},404
+        abort(404,message="Store not found")
     
     item_id = uuid.uuid4().hex
     item = {**item_data,"id":item_id}
@@ -36,13 +60,13 @@ def get_store(store_id):
     try:
         return  stores[store_id]
     except KeyError:
-        return {"message": "Store not found"}, 404
+        abort(404,message="Store not found")
 
 @app.get("/item/<string:item_id>")
 def get_item(item_id):
     try:        
         return  items[item_id]
     except KeyError:
-        return {"message": "Store not found"}, 404
+        abort(404,message="Store not found")
 
 
