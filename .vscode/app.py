@@ -10,7 +10,7 @@ app = Flask(__name__)
 @app.get("/store") #  endpoint
 def get_stores(): #function
     return {"stores": list(stores.values())}
-
+ 
 @app.post("/store")
 def create_store():
     store_data = request.get_json()
